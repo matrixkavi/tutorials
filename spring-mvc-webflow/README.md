@@ -1,8 +1,7 @@
-=========
+## Spring MVC WebFlow
 
-## Spring MVC with Spring Web Flow
-
-###The Course
+This module contains articles about Spring MVC Web Flow
 
 ### Relevant Articles: 
-- 
+
+- [Guide to Spring Web Flow](https://www.baeldung.com/spring-web-flow)

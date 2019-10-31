@@ -4,7 +4,6 @@ import static org.hamcrest.Matchers.equalTo;
 import static org.junit.Assert.assertThat;
 
 import java.io.IOException;
-import java.security.cert.X509Certificate;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
@@ -18,8 +17,7 @@ import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.protocol.HttpClientContext;
-import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
-import org.apache.http.conn.ssl.SSLContexts;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustStrategy;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -31,6 +29,7 @@ import org.apache.http.impl.nio.reactor.DefaultConnectingIOReactor;
 import org.apache.http.nio.reactor.ConnectingIOReactor;
 import org.apache.http.protocol.BasicHttpContext;
 import org.apache.http.protocol.HttpContext;
+import org.apache.http.ssl.SSLContexts;
 import org.junit.Test;
 
 public class HttpAsyncClientLiveTest {
@@ -101,15 +100,10 @@ public class HttpAsyncClientLiveTest {
 
     @Test
     public void whenUseSSLWithHttpAsyncClient_thenCorrect() throws Exception {
-        final TrustStrategy acceptingTrustStrategy = new TrustStrategy() {
-            @Override
-            public final boolean isTrusted(final X509Certificate[] certificate, final String authType) {
-                return true;
-            }
-        };
+        final TrustStrategy acceptingTrustStrategy = (certificate, authType) -> true;
         final SSLContext sslContext = SSLContexts.custom().loadTrustMaterial(null, acceptingTrustStrategy).build();
 
-        final CloseableHttpAsyncClient client = HttpAsyncClients.custom().setSSLHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER).setSSLContext(sslContext).build();
+        final CloseableHttpAsyncClient client = HttpAsyncClients.custom().setSSLHostnameVerifier(NoopHostnameVerifier.INSTANCE).setSSLContext(sslContext).build();
 
         client.start();
         final HttpGet request = new HttpGet(HOST_WITH_SSL);
@@ -160,7 +154,7 @@ public class HttpAsyncClientLiveTest {
         private final HttpContext context;
         private final HttpGet request;
 
-        public GetThread(final CloseableHttpAsyncClient client, final HttpGet request) {
+        GetThread(final CloseableHttpAsyncClient client, final HttpGet request) {
             this.client = client;
             context = HttpClientContext.create();
             this.request = request;
